@@ -1,0 +1,18 @@
+services:
+  web:
+    container_name: web
+    image: nginx:latest
+    ports:
+      - "80:80"     # Ne pas toucher
+      - "443:443"   # Ne pas toucher
+      - "8082:8082" # site.exemple.com
+    volumes:
+      - ./certs:/etc/letsencrypt/live:ro
+      - ./conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - web-network
+    restart: always
+
+networks:
+  web-network:
+    driver: bridge
