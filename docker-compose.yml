@@ -3,8 +3,8 @@ services:
     container_name: web
     image: nginx:latest
     ports:
-      - "80:80"     # Ne pas toucher
-      - "443:443"   # Ne pas toucher
+      - "80:80"     # Ne pas changer
+      - "443:443"   # Ne pas changer
       - "8082:8082" # site.exemple.com
     volumes:
       - ./certs:/etc/letsencrypt/live:ro
