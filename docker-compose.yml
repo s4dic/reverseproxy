@@ -1,17 +1,50 @@
 services:
   web:
     container_name: web
-    image: nginx:latest
+    image: openresty/openresty:alpine
+    restart: unless-stopped
     ports:
-      - "80:80"     # Ne pas changer
-      - "443:443"   # Ne pas changer
-      - "8082:8082" # site.exemple.com
+      - "80:80"
+      - "443:443"
+
     volumes:
-      - ./certs:/etc/letsencrypt/live:ro
-      - ./conf.d:/etc/nginx/conf.d:ro
+      # Configuration principale
+      - ./config/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./config/htpasswd:/usr/local/openresty/nginx/conf/.htpasswd:ro
+      - ./config/ssl-params.conf:/usr/local/openresty/nginx/conf/snippets/ssl-params.conf:ro
+      - ./config/ssl-params-plex.conf:/usr/local/openresty/nginx/conf/snippets/ssl-params-plex.conf:ro
+      - ./config/proxy-params.conf:/usr/local/openresty/nginx/conf/snippets/proxy-params.conf:ro
+      - ./config/error-pages.conf:/usr/local/openresty/nginx/conf/snippets/error-pages.conf:ro
+
+      # ✅ Pages d'erreur (dossier complet + fichiers individuels pour s'assurer du montage)
+      - ./config/error-pages:/usr/local/openresty/nginx/html:ro
+      - ./config/error-pages/401.html:/usr/local/openresty/nginx/html/401.html:ro
+      - ./config/error-pages/404.html:/usr/local/openresty/nginx/html/404.html:ro
+      - ./config/error-pages/50x.html:/usr/local/openresty/nginx/html/50x.html:ro
+
+      # Domaines
+      - ./domains/SITEWEB1.com:/usr/local/openresty/nginx/conf/domains/SITEWEB1.com:ro
+      - ./domains/SITEWEB2:/usr/local/openresty/nginx/conf/domains/SITEWEB2.com:ro
+
+      # Logs
+      - nginx_logs:/usr/local/openresty/nginx/logs
+
     networks:
       - web-network
-    restart: always
+
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+    healthcheck:
+      test: ["CMD", "/usr/local/openresty/bin/openresty", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  nginx_logs:
 
 networks:
   web-network:
